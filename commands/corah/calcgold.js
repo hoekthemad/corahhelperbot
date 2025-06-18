@@ -7,7 +7,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         // #region Command Builder
         // I normally use .setName as the 
-        .setName('calcdia')
+        .setName('calcgold')
         .setDescription('Calculate the amount of diamonds a sum of gold is worth')
         .addNumberOption(option =>
             option
@@ -17,8 +17,8 @@ module.exports = {
         )
         .addNumberOption(option =>
             option
-                .setName('gold')
-                .setDescription('The amount of gold you want to convert.')
+                .setName('diamonds')
+                .setDescription('The amount of diamonds you want to convert.')
                 .setRequired(true)
         )
         // Set the default permission the user needs in order to even see the command.
@@ -36,23 +36,24 @@ module.exports = {
             let fsDB = new FSDB(`logs/${guildId}.json`);
             fsDB.compact = false;
             let conversionRate = 1*interaction.options.getNumber(`conversion`);
-            let goldToConvert = 1*interaction.options.getNumber(`gold`);
+            let diaToConvert = 1*interaction.options.getNumber(`diamonds`);
 
             let date = new Date();
 
-            console.log(`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${goldToConvert} using ${conversionRate} dia per million at ${date}`);
-            //fsDB.push('Info1', [`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${goldToConvert} using ${conversionRate} dia per million at ${date}`]);
+            console.log(`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${diaToConvert} using ${conversionRate} dia per million at ${date}`);
+            //fsDB.push('Info1', [`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${diaToConvert} using ${conversionRate} dia per million at ${date}`]);
 
-            let returnValue = (goldToConvert/1000000)*conversionRate;
+            let millionPerDia = 1000000/conversionRate;
+            let returnValue = Math.round(diaToConvert*millionPerDia);
             await interaction.reply({ content: `** **`, flags: MessageFlags.Ephemeral });
             let messageEmbed = new EmbedBuilder()
                 .setTitle("Convert gold to dia value")
                 .setColor(0x00FF00)
                 .setAuthor({ name: interaction.user.globalName })
-                .setDescription("Find out how much your gold is worth")
+                .setDescription("Find out how much gold your diamonds are worth")
                 .setTimestamp()
                 .addFields({ name: 'Dia Per Million', value: conversionRate.toString() })
-                .addFields({ name: 'Gold To Convert', value: goldToConvert.toLocaleString().toString() })
+                .addFields({ name: 'Dia To Convert', value: diaToConvert.toLocaleString().toString() })
                 .addFields({ name: 'Gold Value', value: `${returnValue.toLocaleString()}` })
                 .setFooter({text: "Good luck"});
             await interaction.editReply({ embeds: [messageEmbed], flags: MessageFlags.Ephemeral });

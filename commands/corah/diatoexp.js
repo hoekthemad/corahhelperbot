@@ -7,18 +7,24 @@ module.exports = {
     data: new SlashCommandBuilder()
         // #region Command Builder
         // I normally use .setName as the 
-        .setName('calcdia')
+        .setName('diatoexp')
         .setDescription('Calculate the amount of diamonds a sum of gold is worth')
         .addNumberOption(option =>
             option
-                .setName('conversion')
-                .setDescription('The value you want to convert the gold using (e.g. 1.76 would be 1.76 dia per million).')
+                .setName('start')
+                .setDescription('The amount of exp seen to track from.')
                 .setRequired(true)
         )
         .addNumberOption(option =>
             option
-                .setName('gold')
-                .setDescription('The amount of gold you want to convert.')
+                .setName('end')
+                .setDescription('The amount of exp seen to track to.')
+                .setRequired(true)
+        )
+        .addNumberOption(option =>
+            option
+                .setName('dia')
+                .setDescription('The amount of diamonds you spent.')
                 .setRequired(true)
         )
         // Set the default permission the user needs in order to even see the command.
@@ -35,25 +41,32 @@ module.exports = {
             
             let fsDB = new FSDB(`logs/${guildId}.json`);
             fsDB.compact = false;
-            let conversionRate = 1*interaction.options.getNumber(`conversion`);
-            let goldToConvert = 1*interaction.options.getNumber(`gold`);
+            let startExp = 1*interaction.options.getNumber(`start`);
+            let endExp = 1*interaction.options.getNumber(`end`);
+
+            let expDiff = endExp-startExp;
+
+            let diaSpent = 1*interaction.options.getNumber(`dia`);
+
+            let expToDia = Math.round(expDiff/diaSpent);
 
             let date = new Date();
+            await interaction.reply({ content: `** **`, flags: MessageFlags.Ephemeral });
 
-            console.log(`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${goldToConvert} using ${conversionRate} dia per million at ${date}`);
+            // console.log(`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${goldToConvert} using ${conversionRate} dia per million at ${date}`);
             //fsDB.push('Info1', [`Command running by ${interaction.user.globalName} in ${guild.name}\r\nConverting ${goldToConvert} using ${conversionRate} dia per million at ${date}`]);
 
-            let returnValue = (goldToConvert/1000000)*conversionRate;
-            await interaction.reply({ content: `** **`, flags: MessageFlags.Ephemeral });
             let messageEmbed = new EmbedBuilder()
-                .setTitle("Convert gold to dia value")
+                .setTitle("Exp:Diamond ratio")
                 .setColor(0x00FF00)
                 .setAuthor({ name: interaction.user.globalName })
-                .setDescription("Find out how much your gold is worth")
+                .setDescription("FInd out how much exp you're getting for every diamond spent")
                 .setTimestamp()
-                .addFields({ name: 'Dia Per Million', value: conversionRate.toString() })
-                .addFields({ name: 'Gold To Convert', value: goldToConvert.toLocaleString().toString() })
-                .addFields({ name: 'Gold Value', value: `${returnValue.toLocaleString()}` })
+                .addFields({ name: 'Starting Exp', value: `${startExp.toLocaleString()}` })
+                .addFields({ name: 'End Exp', value: `${endExp.toLocaleString()}` })
+                .addFields({ name: 'Exp Diff', value: `${expDiff.toLocaleString()}` })
+                .addFields({ name: 'Dia Spent', value: `${diaSpent.toLocaleString()}` })
+                .addFields({ name: 'Exp Per Dia', value: `${expToDia.toLocaleString()}` })
                 .setFooter({text: "Good luck"});
             await interaction.editReply({ embeds: [messageEmbed], flags: MessageFlags.Ephemeral });
             
